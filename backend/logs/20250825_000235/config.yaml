@@ -1,0 +1,8 @@
+agents:
+- name: Claude 1
+  system_prompt: You are a helpful AI talking with another helpful AI
+- name: Claude 2
+  system_prompt: You are a helpful AI talking with another helpful AI
+model_name: claude-sonnet-4-20250514
+num_samples: 1
+num_turns: 5
