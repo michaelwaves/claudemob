@@ -33,7 +33,7 @@ export function ExperimentRunner({ config, onReset, isRunning, setIsRunning }: E
   const [messages, setMessages] = useState<Message[]>([])
   const [currentTurn, setCurrentTurn] = useState(0)
   const [currentAgent, setCurrentAgent] = useState(0)
-  const [conversationHistory, setConversationHistory] = useState<{ role: string; content: string }[]>([])
+  const [conversationHistory, setConversationHistory] = useState<{ speaker: string; content: string }[]>([])
   const [currentMessage, setCurrentMessage] = useState("Hello! I'm looking forward to our conversation.")
   const [streamingContent, setStreamingContent] = useState('')
   const [streamingSpeaker, setStreamingSpeaker] = useState('')
@@ -141,11 +141,9 @@ export function ExperimentRunner({ config, onReset, isRunning, setIsRunning }: E
                 setStreamingContent('')
                 setStreamingSpeaker('')
 
-                const newHistory = [
-                  ...history,
-                  { role: 'user', content: message },
-                  { role: 'assistant', content: data.fullContent }
-                ]
+                const newHistory = data.fullContent.trim() 
+                  ? [...history, { speaker: data.speaker, content: data.fullContent }]
+                  : history
 
                 if (!data.finished) {
                   setCurrentTurn(data.nextTurn)

@@ -7,12 +7,12 @@ const client = new Anthropic({
 
 export async function POST(request: NextRequest) {
   try {
-    const { 
-      config, 
-      currentTurn, 
-      currentAgent, 
-      conversationHistory, 
-      currentMessage 
+    const {
+      config,
+      currentTurn,
+      currentAgent,
+      conversationHistory,
+      currentMessage
     } = await request.json()
 
     if (currentTurn >= config.numTurns) {
@@ -20,18 +20,31 @@ export async function POST(request: NextRequest) {
     }
 
     const agentConfig = config.agents[currentAgent]
-    
+
     const encoder = new TextEncoder()
     const stream = new TransformStream()
     const writer = stream.writable.getWriter()
+    // Build conversation history as a single concatenated string in JSON format
+    let conversationText = ""
+    if (conversationHistory.length > 0) {
+      conversationText = conversationHistory.map(msg => JSON.stringify({
+        role: msg.speaker || 'Claude',
+        content: msg.content
+      })).join('\n')
+    }
+
+
+    const messages = conversationText
+      ? [{ role: 'user' as const, content: conversationText }]
+      : [{ role: 'user' as const, content: "Hello!" }]
+
+    console.log(messages)
 
     const response = client.messages.stream({
       model: config.modelName,
       max_tokens: 1024,
       system: agentConfig.systemPrompt,
-      messages: conversationHistory.length > 0 
-        ? [...conversationHistory, { role: 'user', content: currentMessage }]
-        : [{ role: 'user', content: currentMessage || "Hello! I'm looking forward to our conversation." }]
+      messages
     })
 
     let fullContent = ''
@@ -52,7 +65,7 @@ export async function POST(request: NextRequest) {
       .on('end', () => {
         const nextAgent = (currentAgent + 1) % config.agents.length
         const nextTurn = nextAgent === 0 ? currentTurn + 1 : currentTurn
-        
+
         const endData = JSON.stringify({
           type: 'complete',
           fullContent,
