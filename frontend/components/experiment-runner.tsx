@@ -47,6 +47,28 @@ export function ExperimentRunner({ config, onReset, isRunning, setIsRunning }: E
     scrollToBottom()
   }, [messages, streamingContent])
 
+  const downloadTranscript = async () => {
+    const fullMessages = messages.map((message) => {
+      return {
+        ...message,
+        modelName: config.modelName
+      }
+    })
+    const messagesStr = JSON.stringify(fullMessages, null, 2);
+    const blob = new Blob([messagesStr], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    const now = new Date();
+    const timestamp = now
+      .toISOString().replace("T", "_")
+      .replace(/:/g, "-")
+      .split(".")[0];
+    link.href = url;
+    link.download = `messages_${timestamp}.json`
+    document.body.appendChild(link);
+    link.click()
+  }
+
   const startExperiment = async () => {
     setIsRunning(true)
     setMessages([])
@@ -54,7 +76,7 @@ export function ExperimentRunner({ config, onReset, isRunning, setIsRunning }: E
     setCurrentAgent(0)
     setConversationHistory([])
     setCurrentMessage("Hello! I'm looking forward to our conversation.")
-    
+
     await runNextTurn(0, 0, [], "Hello! I'm looking forward to our conversation.")
   }
 
@@ -92,17 +114,17 @@ export function ExperimentRunner({ config, onReset, isRunning, setIsRunning }: E
 
       while (true) {
         const { done, value } = await reader.read()
-        
+
         if (done) break
 
         const chunk = decoder.decode(value, { stream: true })
         const lines = chunk.split('\n')
-        
+
         for (const line of lines) {
           if (line.startsWith('data: ')) {
             try {
               const data = JSON.parse(line.slice(6))
-              
+
               if (data.type === 'text') {
                 setStreamingContent(prev => prev + data.content)
                 fullContent += data.content
@@ -114,23 +136,23 @@ export function ExperimentRunner({ config, onReset, isRunning, setIsRunning }: E
                   agent: data.currentAgent,
                   timestamp: new Date()
                 }
-                
+
                 setMessages(prev => [...prev, newMessage])
                 setStreamingContent('')
                 setStreamingSpeaker('')
-                
+
                 const newHistory = [
                   ...history,
                   { role: 'user', content: message },
                   { role: 'assistant', content: data.fullContent }
                 ]
-                
+
                 if (!data.finished) {
                   setCurrentTurn(data.nextTurn)
                   setCurrentAgent(data.nextAgent)
                   setConversationHistory(newHistory)
                   setCurrentMessage(data.fullContent)
-                  
+
                   setTimeout(() => {
                     runNextTurn(data.nextTurn, data.nextAgent, newHistory, data.fullContent)
                   }, 1000)
@@ -202,7 +224,7 @@ export function ExperimentRunner({ config, onReset, isRunning, setIsRunning }: E
                 Turn {currentTurn + 1} of {config.numTurns}
               </span>
             </div>
-            
+
             <div className="flex items-center gap-2">
               <MessageCircle className="w-4 h-4 text-muted-foreground" />
               <span className="text-sm text-muted-foreground">
@@ -211,9 +233,9 @@ export function ExperimentRunner({ config, onReset, isRunning, setIsRunning }: E
             </div>
 
             <div className="flex-1" />
-            
+
             {!isRunning ? (
-              <Button 
+              <Button
                 onClick={startExperiment}
                 className="gap-2 bg-gradient-to-r from-primary to-primary/80"
               >
@@ -221,7 +243,7 @@ export function ExperimentRunner({ config, onReset, isRunning, setIsRunning }: E
                 Start Experiment
               </Button>
             ) : (
-              <Button 
+              <Button
                 onClick={stopExperiment}
                 variant="destructive"
                 className="gap-2"
@@ -252,8 +274,8 @@ export function ExperimentRunner({ config, onReset, isRunning, setIsRunning }: E
                 )}
               >
                 <div className="flex items-center justify-between mb-2">
-                  <Badge 
-                    variant="outline" 
+                  <Badge
+                    variant="outline"
                     className={getAgentColor(message.agent)}
                   >
                     {message.speaker}
@@ -267,12 +289,12 @@ export function ExperimentRunner({ config, onReset, isRunning, setIsRunning }: E
                 </p>
               </div>
             ))}
-            
+
             {streamingContent && (
               <div className="p-4 rounded-lg border border-primary/20 bg-gradient-to-r from-primary/5 to-primary/10 animate-pulse">
                 <div className="flex items-center justify-between mb-2">
-                  <Badge 
-                    variant="outline" 
+                  <Badge
+                    variant="outline"
                     className={getAgentColor(currentAgent)}
                   >
                     {streamingSpeaker}
@@ -288,7 +310,7 @@ export function ExperimentRunner({ config, onReset, isRunning, setIsRunning }: E
                 </p>
               </div>
             )}
-            
+
             <div ref={messagesEndRef} />
           </div>
         </CardContent>
@@ -304,13 +326,14 @@ export function ExperimentRunner({ config, onReset, isRunning, setIsRunning }: E
           </CardHeader>
           <CardContent>
             <div className="flex gap-4">
-              <Button className="gap-2" disabled>
+              <Button className="gap-2"
+                onClick={() => downloadTranscript()}
+              >
                 <Save className="w-4 h-4" />
                 Save Results
-                <Badge variant="secondary" className="ml-2">Coming Soon</Badge>
               </Button>
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 onClick={() => {
                   setMessages([])
                   setCurrentTurn(0)

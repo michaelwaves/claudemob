@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Plus, Trash2, Settings, Users, Play } from 'lucide-react'
+import ModelsDropdown from './models-dropdown'
 
 const configSchema = z.object({
   numTurns: z.number().min(1).max(50),
@@ -29,8 +30,8 @@ interface ConfigFormProps {
 
 export function ConfigForm({ onSubmit }: ConfigFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false)
-  
-  const { register, control, handleSubmit, formState: { errors } } = useForm<ConfigForm>({
+
+  const { register, control, handleSubmit, watch, setValue, formState: { errors } } = useForm<ConfigForm>({
     resolver: zodResolver(configSchema),
     defaultValues: {
       numTurns: 5,
@@ -47,6 +48,8 @@ export function ConfigForm({ onSubmit }: ConfigFormProps) {
     control,
     name: 'agents'
   })
+
+  const modelName = watch('modelName')
 
   const onFormSubmit = async (data: ConfigForm) => {
     setIsSubmitting(true)
@@ -89,7 +92,7 @@ export function ConfigForm({ onSubmit }: ConfigFormProps) {
               )}
             </div>
 
-            <div className="space-y-2">
+            {/*  <div className="space-y-2">
               <Label htmlFor="numSamples" className="text-sm font-medium">
                 Number of Samples
               </Label>
@@ -104,16 +107,15 @@ export function ConfigForm({ onSubmit }: ConfigFormProps) {
               {errors.numSamples && (
                 <p className="text-sm text-destructive">{errors.numSamples.message}</p>
               )}
-            </div>
+            </div> */}
 
             <div className="space-y-2">
               <Label htmlFor="modelName" className="text-sm font-medium">
                 Model Name
               </Label>
-              <Input
-                id="modelName"
-                className="bg-background/50"
-                {...register('modelName')}
+              <ModelsDropdown
+                value={modelName}
+                onChange={(value) => setValue('modelName', value)}
               />
               {errors.modelName && (
                 <p className="text-sm text-destructive">{errors.modelName.message}</p>
@@ -209,7 +211,7 @@ export function ConfigForm({ onSubmit }: ConfigFormProps) {
               ) : (
                 <Play className="w-5 h-5" />
               )}
-              {isSubmitting ? 'Starting Experiment...' : 'Start Experiment'}
+              {isSubmitting ? 'Starting Experiment...' : 'Next'}
             </Button>
           </div>
         </form>
