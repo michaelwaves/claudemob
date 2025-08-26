@@ -80,7 +80,7 @@ export function ExperimentRunner({ config, onReset, isRunning, setIsRunning }: E
     await runNextTurn(0, 0, [], "Hello! I'm looking forward to our conversation.")
   }
 
-  const runNextTurn = async (turn: number, agent: number, history: { role: string; content: string }[], message: string) => {
+  const runNextTurn = async (turn: number, agent: number, history: { speaker: string; content: string }[], message: string) => {
     if (turn >= config.numTurns) {
       setIsRunning(false)
       return
@@ -141,7 +141,7 @@ export function ExperimentRunner({ config, onReset, isRunning, setIsRunning }: E
                 setStreamingContent('')
                 setStreamingSpeaker('')
 
-                const newHistory = data.fullContent.trim() 
+                const newHistory = data.fullContent.trim()
                   ? [...history, { speaker: data.speaker, content: data.fullContent }]
                   : history
 

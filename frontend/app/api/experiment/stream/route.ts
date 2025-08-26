@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
     // Build conversation history as a single concatenated string in JSON format
     let conversationText = ""
     if (conversationHistory.length > 0) {
-      conversationText = conversationHistory.map(msg => JSON.stringify({
+      conversationText = conversationHistory.map((msg: any) => JSON.stringify({
         role: msg.speaker || 'Claude',
         content: msg.content
       })).join('\n')
